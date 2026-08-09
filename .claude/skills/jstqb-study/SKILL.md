@@ -23,7 +23,10 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
   - 変換元はJSTQB公式シラバス(Version 2023V4.0.J02)を`pdftotext`でテキスト抽出したもの。図表に依存するセクション(4.2.3, 4.2.4, 5.1.6, 5.1.7など)は手動でテキスト補足する
   - `learning_objectives`は節ごとの学習目的一覧(`cognitive_level`: 記憶/理解/適用, `description`)。**出題時にどんな問い方をするかの観点として使う**(下記「learning_objectivesの使い方」を参照)
   - 全6章・22節分のデータを整備済み(4.2.3・4.2.4・5.1.6・5.1.7は図表なしを確認済みのため、他章でも図表が見つかった場合のみ個別に手動補足する)
-- `records/answers.json` — 回答記録。各要素は `id` / `chapter_id` / `answered_at` / `question_text` / `user_answer` / `model_answer` / `understanding_level`(◎/△/×)を持つ
+- `records/answers.jsonl` — 回答記録。**JSONL形式(1行1レコード)**で、1件ごとに末尾へ1行追記する。JSON配列にすると追記のたびに全体を読み書きする必要がありGit diffも汚れるため、追記コストの低いJSONLを採用している
+  - 各行は `chapter_id` / `answered_at`(ISO8601, 日時まで) / `cognitive_level`(出題時に参考にしたlearning_objectivesの認知レベル) / `learning_objective`(同、description) / `question_text` / `user_answer` / `model_answer` / `understanding_level`(◎/△/×) を持つ
+  - `id`は持たない。他のエンティティから参照されないため、時刻まで含む`answered_at`で一意性・並び替えの両方を兼ねる
+  - 例: `{"chapter_id": "1.2", "answered_at": "2026-08-09T14:32:00+09:00", "cognitive_level": "理解", "learning_objective": "テストと品質保証の関係を想起する。", "question_text": "...", "user_answer": "...", "model_answer": "...", "understanding_level": "△"}`
   - **未整備**: このファイルはまだ存在しない。初回セッション実行時に新規作成する
 
 ## 学習セッションの流れ
@@ -33,9 +36,9 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
    - 表記ゆれは許容し、柔軟に判断する。複数章・節にまたがる発話なら複数を対象にする
    - 該当する章・節が見つからない場合は、近い候補を提示して再入力を促す(セッションは打ち切らない)
 3. 出題数を確認する
-4. 該当する章・節の `content`、`learning_objectives`、学習者が話した「学んだこと」の3つを踏まえて、自由記述の理解度チェック問題を1問生成する(`learning_objectives`の使い方は下記を参照)
+4. 該当する章・節の `content`、`learning_objectives`、学習者が話した「学んだこと」の3つを踏まえて、自由記述の理解度チェック問題を1問生成する(`learning_objectives`の使い方は下記を参照)。このとき、どの`learning_objectives`の項目を参考にしたかを覚えておく(記録時に使う)
 5. 学習者の回答を受け取り、`content` と照合して理解度レベル(◎/△/×)を判定し、模範解答・解説をフィードバックする
-6. 回答記録を `records/answers.json` に追記する(章・節ID、問題文、回答、理解度レベル、実施日)
+6. 回答記録を `records/answers.jsonl` に1行追記する(章・節ID、実施日時、参考にしたlearning_objectivesのcognitive_level/description、問題文、回答、模範解答、理解度レベル)
 7. 指定した問題数に達するまで4〜6を繰り返し、セッションを終える
 
 ## learning_objectivesの使い方
@@ -50,12 +53,12 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
 
 ## 弱点分析
 
-- 学習者から求められたら、`records/answers.json` を章・節別に集計し、理解度レベルが低い(×・△が多い)章・節を提示する
+- 学習者から求められたら、`records/answers.jsonl` を章・節別、および`cognitive_level`(記憶/理解/適用)別に集計し、理解度レベルが低い(×・△が多い)章・節・認知レベルを提示する
 
 ## TODO(未確定事項、設計.mdより)
 
 - [x] `materials/chapters.json` の実データ作成(公式シラバスPDFの章立てJSON化)
+- [x] `records/answers.jsonl` の具体的なファイル構成(JSONL・単一ファイルに決定)
+- [x] モバイル(Claudeアプリ)からの利用時のファイルアクセス方法(動作確認済み)
 - [ ] Skill起動時のコマンド/呼び出し方の具体化(トリガーフレーズ)
 - [ ] 理解度レベル(◎/△/×)の判定基準の詳細化(部分点の考え方)
-- [ ] `records/answers.json` の具体的なファイル構成(章・節単位で分割するかなど)
-- [ ] モバイル(Claudeアプリ)からの利用時のファイルアクセス方法
