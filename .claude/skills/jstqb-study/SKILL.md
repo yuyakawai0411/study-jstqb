@@ -23,6 +23,9 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
   - 変換元はJSTQB公式シラバス(Version 2023V4.0.J02)を`pdftotext`でテキスト抽出したもの。図表に依存するセクション(4.2.3, 4.2.4, 5.1.6, 5.1.7など)は手動でテキスト補足する
   - `learning_objectives`は節ごとの学習目的一覧(`cognitive_level`: 記憶/理解/適用, `description`)。**出題時にどんな問い方をするかの観点として使う**(下記「learning_objectivesの使い方」を参照)
   - 全6章・22節分のデータを整備済み(4.2.3・4.2.4・5.1.6・5.1.7は図表なしを確認済みのため、他章でも図表が見つかった場合のみ個別に手動補足する)
+  - ファイル全体で約180KBあるため、**`Read`で全文を読み込まず`jq`で必要な範囲だけ抽出する**こと
+    - 章・節の照合(発話とのマッチング)には `jq '[.[] | {chapter_id, level, title}]' materials/chapters.json` でタイトル一覧だけを取得すれば十分
+    - 出題・採点で本文が必要な節が決まったら `jq '.[] | select(.chapter_id=="1.2")' materials/chapters.json` のように該当レコードだけを取得する
 - `records/answers.jsonl` — 回答記録。**JSONL形式(1行1レコード)**で、1件ごとに末尾へ1行追記する。JSON配列にすると追記のたびに全体を読み書きする必要がありGit diffも汚れるため、追記コストの低いJSONLを採用している
   - 各行は `chapter_id` / `answered_at`(ISO8601, 日時まで) / `cognitive_level`(出題時に参考にしたlearning_objectivesの認知レベル) / `learning_objective`(同、description) / `question_text` / `user_answer` / `model_answer` / `understanding_level`(◎/△/×) を持つ
   - `id`は持たない。他のエンティティから参照されないため、時刻まで含む`answered_at`で一意性・並び替えの両方を兼ねる
@@ -92,3 +95,4 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
 - [x] モバイル(Claudeアプリ)からの利用時のファイルアクセス方法(動作確認済み)
 - [x] 理解度レベル(◎/△/×)の判定基準の詳細化(部分点の考え方) → 「採点基準」を参照
 - [x] Skill起動時のコマンド/呼び出し方の具体化(トリガーフレーズ) → 「呼び出し方(トリガー)」を参照
+- [x] 採点時にどの範囲のシラバスJSONを読み込むか → `jq`での部分抽出に決定(「データ」セクションを参照)
