@@ -19,8 +19,9 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
 
 ## データ
 
-- `materials/chapters.json` — 公式シラバスを章・節の2階層で構造化したマスタデータ(章:1〜6, 節:1.1, 1.2, …)。各要素は `chapter_id` / `parent_chapter_id` / `level`(章 or 節) / `chapter_number` / `title` / `keywords` / `learning_objectives` / `content`(シラバス原文抜粋)を持つ
+- `materials/chapters.json` — 公式シラバスを章・節の2階層で構造化したマスタデータ(章:1〜6, 節:1.1, 1.2, …)。各要素は `chapter_id` / `parent_chapter_id` / `level`(章 or 節) / `chapter_number` / `title` / `learning_objectives` / `content`(シラバス原文抜粋)を持つ
   - 変換元はJSTQB公式シラバス(Version 2023V4.0.J02)を`pdftotext`でテキスト抽出したもの。図表に依存するセクション(4.2.3, 4.2.4, 5.1.6, 5.1.7など)は手動でテキスト補足する
+  - `learning_objectives`は節ごとの学習目的一覧(`id`: FL-x.x.x, `cognitive_level`: 記憶/理解/適用, `description`)。**出題時にどんな問い方をするかの観点として使う**(下記「learning_objectivesの使い方」を参照)
   - **未整備**: このファイルはまだ存在しない。実データ投入は別タスク
 - `records/answers.json` — 回答記録。各要素は `id` / `chapter_id` / `answered_at` / `question_text` / `user_answer` / `model_answer` / `understanding_level`(◎/△/×)を持つ
   - **未整備**: このファイルはまだ存在しない。初回セッション実行時に新規作成する
@@ -32,10 +33,20 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
    - 表記ゆれは許容し、柔軟に判断する。複数章・節にまたがる発話なら複数を対象にする
    - 該当する章・節が見つからない場合は、近い候補を提示して再入力を促す(セッションは打ち切らない)
 3. 出題数を確認する
-4. 該当する章・節の `content` と、学習者が話した「学んだこと」の両方を踏まえて、自由記述の理解度チェック問題を1問生成する
+4. 該当する章・節の `content`、`learning_objectives`、学習者が話した「学んだこと」の3つを踏まえて、自由記述の理解度チェック問題を1問生成する(`learning_objectives`の使い方は下記を参照)
 5. 学習者の回答を受け取り、`content` と照合して理解度レベル(◎/△/×)を判定し、模範解答・解説をフィードバックする
 6. 回答記録を `records/answers.json` に追記する(章・節ID、問題文、回答、理解度レベル、実施日)
 7. 指定した問題数に達するまで4〜6を繰り返し、セッションを終える
+
+## learning_objectivesの使い方
+
+学習は節単位で行われる。1つの節の学習が終わったとき、その節の`learning_objectives`は「どんな観点で問題を作るべきか」の参考情報として使う。各項目の`cognitive_level`に応じて、問い方を変えること。
+
+- **記憶**: 用語や事実をそのまま思い出せるかを問う。「〇〇を定義してください」「△△とは何か説明してください」のような想起型の問題にする
+- **理解**: 概念同士の関係・違いを問う。「〇〇と△△の違いを説明してください」「なぜ〇〇なのか理由を説明してください」のような比較・理由説明型の問題にする
+- **適用**: 具体的な状況に当てはめられるかを問う。「次のようなケースでは〇〇をどう使いますか」のような応用・適用型の問題にする
+
+1つの節に複数の`learning_objectives`がある場合、出題数に応じてまんべんなく異なる目的・cognitive_levelから出題する(同じ目的に偏らないようにする)。学習者が話した「学んだこと」がどの`learning_objectives`に対応するかも踏まえて、実際に学習者が触れた観点を優先的に出題する。
 
 ## 弱点分析
 
