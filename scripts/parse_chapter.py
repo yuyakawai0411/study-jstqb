@@ -68,7 +68,6 @@ def parse_chapter(lines: list[str], chapter_number: str) -> dict:
                 section_key = ".".join(fl_id.replace("FL-", "").split(".")[:2])
                 objectives_by_section.setdefault(section_key, []).append(
                     {
-                        "id": fl_id,
                         "cognitive_level": K_LEVEL_LABELS.get(k_level, k_level),
                         "description": desc.strip(),
                     }

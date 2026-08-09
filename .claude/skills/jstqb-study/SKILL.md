@@ -21,7 +21,7 @@ description: JSTQB Foundation Levelの学習内容について、対話形式で
 
 - `materials/chapters.json` — 公式シラバスを章・節の2階層で構造化したマスタデータ(章:1〜6, 節:1.1, 1.2, …)。各要素は `chapter_id` / `parent_chapter_id` / `level`(章 or 節) / `chapter_number` / `title` / `learning_objectives` / `content`(シラバス原文抜粋)を持つ
   - 変換元はJSTQB公式シラバス(Version 2023V4.0.J02)を`pdftotext`でテキスト抽出したもの。図表に依存するセクション(4.2.3, 4.2.4, 5.1.6, 5.1.7など)は手動でテキスト補足する
-  - `learning_objectives`は節ごとの学習目的一覧(`id`: FL-x.x.x, `cognitive_level`: 記憶/理解/適用, `description`)。**出題時にどんな問い方をするかの観点として使う**(下記「learning_objectivesの使い方」を参照)
+  - `learning_objectives`は節ごとの学習目的一覧(`cognitive_level`: 記憶/理解/適用, `description`)。**出題時にどんな問い方をするかの観点として使う**(下記「learning_objectivesの使い方」を参照)
   - **未整備**: このファイルはまだ存在しない。実データ投入は別タスク
 - `records/answers.json` — 回答記録。各要素は `id` / `chapter_id` / `answered_at` / `question_text` / `user_answer` / `model_answer` / `understanding_level`(◎/△/×)を持つ
   - **未整備**: このファイルはまだ存在しない。初回セッション実行時に新規作成する

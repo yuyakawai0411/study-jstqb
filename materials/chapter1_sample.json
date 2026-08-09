@@ -7,72 +7,58 @@
     "title": "テストの基礎",
     "learning_objectives": [
       {
-        "id": "FL-1.1.1",
         "cognitive_level": "記憶",
         "description": "典型的なテスト目的を識別する。"
       },
       {
-        "id": "FL-1.1.2",
         "cognitive_level": "理解",
         "description": "デバッグとテストを区別する。"
       },
       {
-        "id": "FL-1.2.1",
         "cognitive_level": "理解",
         "description": "テストが必要な理由を例示する。"
       },
       {
-        "id": "FL-1.2.2",
         "cognitive_level": "記憶",
         "description": "テストと品質保証の関係を想起する。"
       },
       {
-        "id": "FL-1.2.3",
         "cognitive_level": "理解",
         "description": "根本原因、エラー、欠陥、故障を区別する。"
       },
       {
-        "id": "FL-1.3.1",
         "cognitive_level": "理解",
         "description": "テストにおける 7 原則を説明する。"
       },
       {
-        "id": "FL-1.4.1",
         "cognitive_level": "理解",
         "description": "さまざまなテスト活動とタスクを要約する。"
       },
       {
-        "id": "FL-1.4.2",
         "cognitive_level": "理解",
         "description": "テストを取り巻くコンテキストがテストプロセスに与える影響を説明する。"
       },
       {
-        "id": "FL-1.4.3",
         "cognitive_level": "理解",
         "description": "テスト活動を支援する多くのテストウェアを区別する。"
       },
       {
-        "id": "FL-1.4.4",
         "cognitive_level": "理解",
         "description": "トレーサビリティを維持することの価値を説明する。"
       },
       {
-        "id": "FL-1.4.5",
         "cognitive_level": "理解",
         "description": "テストにおけるさまざまな役割を比較する。"
       },
       {
-        "id": "FL-1.5.1",
         "cognitive_level": "理解",
         "description": "テストを行うために求められる一般的なスキルについて例を挙げる。"
       },
       {
-        "id": "FL-1.5.2",
         "cognitive_level": "記憶",
         "description": "チーム全体アプローチの利点を想起する。"
       },
       {
-        "id": "FL-1.5.3",
         "cognitive_level": "理解",
         "description": "テストの独立性の長所と短所を区別する。"
       }
@@ -87,12 +73,10 @@
     "title": "テストとは何か？",
     "learning_objectives": [
       {
-        "id": "FL-1.1.1",
         "cognitive_level": "記憶",
         "description": "典型的なテスト目的を識別する。"
       },
       {
-        "id": "FL-1.1.2",
         "cognitive_level": "理解",
         "description": "デバッグとテストを区別する。"
       }
@@ -107,17 +91,14 @@
     "title": "なぜテストが必要か？",
     "learning_objectives": [
       {
-        "id": "FL-1.2.1",
         "cognitive_level": "理解",
         "description": "テストが必要な理由を例示する。"
       },
       {
-        "id": "FL-1.2.2",
         "cognitive_level": "記憶",
         "description": "テストと品質保証の関係を想起する。"
       },
       {
-        "id": "FL-1.2.3",
         "cognitive_level": "理解",
         "description": "根本原因、エラー、欠陥、故障を区別する。"
       }
@@ -132,7 +113,6 @@
     "title": "テストの原則",
     "learning_objectives": [
       {
-        "id": "FL-1.3.1",
         "cognitive_level": "理解",
         "description": "テストにおける 7 原則を説明する。"
       }
@@ -147,27 +127,22 @@
     "title": "テスト活動、テストウェア、そして役割",
     "learning_objectives": [
       {
-        "id": "FL-1.4.1",
         "cognitive_level": "理解",
         "description": "さまざまなテスト活動とタスクを要約する。"
       },
       {
-        "id": "FL-1.4.2",
         "cognitive_level": "理解",
         "description": "テストを取り巻くコンテキストがテストプロセスに与える影響を説明する。"
       },
       {
-        "id": "FL-1.4.3",
         "cognitive_level": "理解",
         "description": "テスト活動を支援する多くのテストウェアを区別する。"
       },
       {
-        "id": "FL-1.4.4",
         "cognitive_level": "理解",
         "description": "トレーサビリティを維持することの価値を説明する。"
       },
       {
-        "id": "FL-1.4.5",
         "cognitive_level": "理解",
         "description": "テストにおけるさまざまな役割を比較する。"
       }
@@ -182,17 +157,14 @@
     "title": "テストに必要不可欠なスキルとよい実践例",
     "learning_objectives": [
       {
-        "id": "FL-1.5.1",
         "cognitive_level": "理解",
         "description": "テストを行うために求められる一般的なスキルについて例を挙げる。"
       },
       {
-        "id": "FL-1.5.2",
         "cognitive_level": "記憶",
         "description": "チーム全体アプローチの利点を想起する。"
       },
       {
-        "id": "FL-1.5.3",
         "cognitive_level": "理解",
         "description": "テストの独立性の長所と短所を区別する。"
       }
