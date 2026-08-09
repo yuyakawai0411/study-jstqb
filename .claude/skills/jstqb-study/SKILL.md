@@ -1,98 +1,104 @@
 ---
 name: jstqb-study
-description: JSTQB Foundation Levelの学習内容について、対話形式で自由記述の理解度チェック問題を出題・採点するSkill。学習者が「今日勉強した章・節と学んだこと」を話すと、公式シラバスの該当範囲から問題を生成し、回答を理解度レベル(◎/△/×)で採点して記録する。「JSTQBの理解度チェックをして」「今日勉強した内容の問題を出して」で学習セッションを開始し、「苦手な章を教えて」「弱点分析して」「今までの理解度を見せて」で記録済みの回答から弱点分析を表示する。いずれもJSTQB・FL学習の文脈で使う。
+description: JSTQB Foundation Levelの学習内容について、対話形式で自由記述の理解度チェック問題を出題・採点するSkill。学習者が「今日勉強した章・節と学んだこと」を話すと、公式シラバスの該当範囲から問題を生成し、回答を理解度レベル(◎/△/×)で採点して記録する。「JSTQBの理解度チェックをして」「今日勉強した内容の問題を出して」といった依頼で使う。JSTQB・FL学習の文脈で使う。
 ---
 
 # JSTQB学習サポートSkill
 
-設計の詳細・図(ユースケース図/ER図/フローチャート)は [issuesリポジトリの設計.md](https://github.com/yuyakawai0411/issues/blob/main/設計.md) を参照。このSKILL.mdは実装の雛形であり、詳細な生成・採点ロジックは今後詰める。
+自由記述の理解度チェック問題のみを出題する。4択形式の問題や反復ドリルは生成しない(テス友アプリが担当する領域のため)。弱点分析は別Skillが担当するため、このSkillでは行わない。
 
-## このSkillが解決する課題
+教材データ(`syllabus/chapters.json`)・回答記録(`records/answers.jsonl`)の構造は [references/data-schema.md](references/data-schema.md) を参照。以下のコマンド例は全てリポジトリルートで実行する前提。
 
-- 従来の練習問題では、自分が学習を終えた章・節までの範囲に絞って練習問題を出すのが難しかった
-- 従来の練習問題は選択式のため、勘で正答できてしまい、なぜその回答になったのか(理解度)をチェックする仕組みがなかった
+## ワークフロー
 
-## スコープ
+### ステップ1: 学習内容のヒアリング
 
-- 4択の反復演習・復習(理解度が浅い問題の再出題)は**扱わない**。4択演習はテス友アプリ、復習は将来作る別Skillが担当する
-- 本Skillは「自由記述の理解度チェック問題の出題・採点・記録・弱点分析(集計表示のみ)」に特化する
+**ARGUMENT**: なし(このステップで学習者から聞き出す)
 
-## データ
+学習者に「今日勉強した章・節」と「学んだこと(内容の要点)」を聞く。聞き出した内容はそれぞれ `<chapter_or_section>`、`<learned_summary>` として以降のステップで使う。
 
-- `materials/chapters.json` — 公式シラバスを章・節の2階層で構造化したマスタデータ(章:1〜6, 節:1.1, 1.2, …)。各要素は `chapter_id` / `parent_chapter_id` / `level`(章 or 節) / `chapter_number` / `title` / `learning_objectives` / `content`(シラバス原文抜粋)を持つ
-  - 変換元はJSTQB公式シラバス(Version 2023V4.0.J02)を`pdftotext`でテキスト抽出したもの。図表に依存するセクション(4.2.3, 4.2.4, 5.1.6, 5.1.7など)は手動でテキスト補足する
-  - `learning_objectives`は節ごとの学習目的一覧(`cognitive_level`: 記憶/理解/適用, `description`)。**出題時にどんな問い方をするかの観点として使う**(下記「learning_objectivesの使い方」を参照)
-  - 全6章・22節分のデータを整備済み(4.2.3・4.2.4・5.1.6・5.1.7は図表なしを確認済みのため、他章でも図表が見つかった場合のみ個別に手動補足する)
-  - ファイル全体で約180KBあるため、**`Read`で全文を読み込まず`jq`で必要な範囲だけ抽出する**こと
-    - 章・節の照合(発話とのマッチング)には `jq '[.[] | {chapter_id, level, title}]' materials/chapters.json` でタイトル一覧だけを取得すれば十分
-    - 出題・採点で本文が必要な節が決まったら `jq '.[] | select(.chapter_id=="1.2")' materials/chapters.json` のように該当レコードだけを取得する
-- `records/answers.jsonl` — 回答記録。**JSONL形式(1行1レコード)**で、1件ごとに末尾へ1行追記する。JSON配列にすると追記のたびに全体を読み書きする必要がありGit diffも汚れるため、追記コストの低いJSONLを採用している
-  - 各行は `chapter_id` / `answered_at`(ISO8601, 日時まで) / `cognitive_level`(出題時に参考にしたlearning_objectivesの認知レベル) / `learning_objective`(同、description) / `question_text` / `user_answer` / `model_answer` / `understanding_level`(◎/△/×) を持つ
-  - `id`は持たない。他のエンティティから参照されないため、時刻まで含む`answered_at`で一意性・並び替えの両方を兼ねる
-  - 例: `{"chapter_id": "1.2", "answered_at": "2026-08-09T14:32:00+09:00", "cognitive_level": "理解", "learning_objective": "テストと品質保証の関係を想起する。", "question_text": "...", "user_answer": "...", "model_answer": "...", "understanding_level": "△"}`
-  - **未整備**: このファイルはまだ存在しない。初回セッション実行時に新規作成する
+成功条件: `<chapter_or_section>` と `<learned_summary>` の両方を学習者から得ている。
 
-## 呼び出し方(トリガー)
+トラブルシューティング: `<learned_summary>` だけ話されて `<chapter_or_section>` に触れていない場合は、章・節を追加で尋ねる。
 
-このSkillが担当する意図は2種類あるため、発話内容からどちらかをまず判定する。
+### ステップ2: 章・節の照合
 
-**学習セッションを開始する(通常フロー)**
-- 例:「今日は1.2を勉強した」「JSTQBの理解度チェックして」「今日勉強した内容の問題を出して」
-- 特徴: 章・節や学習した内容そのものに言及している
-- → 「学習セッションの流れ」を実行する
+**ARGUMENT**: `<chapter_or_section>`(ステップ1)
 
-**弱点分析を見る**
-- 例:「苦手な章を教えて」「弱点分析して」「今までの理解度を見せて」
-- 特徴: 新しい学習内容の話はせず、過去の記録の集計・確認を求めている
-- → 新しい問題は出題せず、「弱点分析」のフローのみを実行する
+章・節一覧を取得し、`<chapter_or_section>` と意味的に照合する。
 
-どちらか判断がつかない発話の場合は、学習者に「今日の学習内容を確認したいですか、それともこれまでの弱点を見たいですか」のように確認してから進める。
+```bash
+jq '[.[] | {chapter_id, level, title}]' syllabus/chapters.json
+```
 
-## 学習セッションの流れ
+表記ゆれは許容し、柔軟に判断する。複数章・節にまたがる発話なら複数を対象にする。マッチした結果を `<chapter_id>` として以降のステップで使う。
 
-1. 学習者が「今日勉強した章・節」と「学んだこと(内容の要点)」を話す
-2. `materials/chapters.json` の章・節一覧と発話内容を意味的に照合し、該当する章・節を特定する
-   - 表記ゆれは許容し、柔軟に判断する。複数章・節にまたがる発話なら複数を対象にする
-   - 該当する章・節が見つからない場合は、近い候補を提示して再入力を促す(セッションは打ち切らない)
-3. 出題数を確認する
-4. 該当する章・節の `content`、`learning_objectives`、学習者が話した「学んだこと」の3つを踏まえて、自由記述の理解度チェック問題を1問生成する(`learning_objectives`の使い方は下記を参照)。このとき、どの`learning_objectives`の項目を参考にしたかを覚えておく(記録時に使う)
-5. 学習者の回答を受け取り、`content` と照合して理解度レベル(◎/△/×)を判定し、模範解答・解説をフィードバックする(判定基準は下記「採点基準」を参照)
-6. 回答記録を `records/answers.jsonl` に1行追記する(章・節ID、実施日時、参考にしたlearning_objectivesのcognitive_level/description、問題文、回答、模範解答、理解度レベル)
-7. 指定した問題数に達するまで4〜6を繰り返し、セッションを終える
+成功条件: 1つ以上の `<chapter_id>` が確定している。
 
-## learning_objectivesの使い方
+トラブルシューティング: 該当する章・節が見つからない場合は、近い候補を提示して再入力を促す(セッションを打ち切らない)。
 
-学習は節単位で行われる。1つの節の学習が終わったとき、その節の`learning_objectives`は「どんな観点で問題を作るべきか」の参考情報として使う。各項目の`cognitive_level`に応じて、問い方を変えること。
+### ステップ3: 出題数の確認
 
-- **記憶**: 用語や事実をそのまま思い出せるかを問う。「〇〇を定義してください」「△△とは何か説明してください」のような想起型の問題にする
-- **理解**: 概念同士の関係・違いを問う。「〇〇と△△の違いを説明してください」「なぜ〇〇なのか理由を説明してください」のような比較・理由説明型の問題にする
-- **適用**: 具体的な状況に当てはめられるかを問う。「次のようなケースでは〇〇をどう使いますか」のような応用・適用型の問題にする
+**ARGUMENT**: なし(このステップで学習者から聞き出す)
 
-1つの節に複数の`learning_objectives`がある場合、出題数に応じてまんべんなく異なる目的・cognitive_levelから出題する(同じ目的に偏らないようにする)。学習者が話した「学んだこと」がどの`learning_objectives`に対応するかも踏まえて、実際に学習者が触れた観点を優先的に出題する。
+学習者に出題数を確認する。聞き出した数を `<question_count>` として以降のステップで使う。
 
-## 採点基準
+成功条件: `<question_count>` が確定している。
 
-公式シラバス付録A「学習している知識の目的と認知レベル」(記憶=K1/理解=K2/適用=K3の定義。出典: Anderson, L. W. and Krathwohl, D. R. (eds) (2001) *A Taxonomy for Learning, Teaching, and Assessing: A Revision of Bloom's Taxonomy of Educational Objectives*)に沿って、出題した問題の`cognitive_level`ごとに判定基準を分ける。
+トラブルシューティング: 学習者が数を明言しない場合は、3問程度をデフォルトとして提案し、確認を取ってから進める。
 
-| cognitive_level | ◎(合格) | △(部分理解) | ×(不合格) |
-|---|---|---|---|
-| **記憶** | 用語・事実を正確に想起できている | 大枠は合っているが用語が不正確、または一部だけ想起できている | 想起できていない、または誤った内容を答えている |
-| **理解** | 概念間の関係・違いを正しく説明できている | 大筋の方向性は合っているが、説明に不正確さ・混同がある | 関係性を誤解している、または原文と矛盾する説明をしている |
-| **適用** | 与えられた事例に対して正しい技法・手順を選び、正しく適用できている | 方向性は合っているが、適用の手順や結果に誤りがある | 誤った技法を選んでいる、または適用が根本的に間違っている |
+### ステップ4: 問題の生成
 
-**横断ルール**: `content`(シラバス原文)と明確に矛盾する記述が回答に含まれる場合、他の部分がどれだけ良くても**その時点で×**とする(原文との矛盾は理解度が低いことの明確なシグナルとして優先する)。
+**ARGUMENT**: `<chapter_id>`(ステップ2)、`<learned_summary>`(ステップ1)
 
-フィードバックでは、判定結果だけでなく「なぜそのレベルと判断したか」を`content`の該当箇所を引用しながら説明すること。
+該当する章・節のレコードを取得する。
 
-## 弱点分析
+```bash
+jq '.[] | select(.chapter_id=="<chapter_id>")' syllabus/chapters.json
+```
 
-- 学習者から求められたら、`records/answers.jsonl` を章・節別、および`cognitive_level`(記憶/理解/適用)別に集計し、理解度レベルが低い(×・△が多い)章・節・認知レベルを提示する
+取得した `content`・`learning_objectives` と `<learned_summary>` の3つを踏まえて、自由記述の理解度チェック問題を1問生成する。観点の選び方は [references/learning-objectives.md](references/learning-objectives.md) を参照。生成した問題文を `<question_text>`、参考にした`learning_objectives`の項目を `<referenced_objective>`(`cognitive_level` と `description`)として以降のステップで使う。
 
-## TODO(未確定事項、設計.mdより)
+成功条件: `<question_text>` が1問生成され、`<referenced_objective>` を記録用に控えている。
 
-- [x] `materials/chapters.json` の実データ作成(公式シラバスPDFの章立てJSON化)
-- [x] `records/answers.jsonl` の具体的なファイル構成(JSONL・単一ファイルに決定)
-- [x] モバイル(Claudeアプリ)からの利用時のファイルアクセス方法(動作確認済み)
-- [x] 理解度レベル(◎/△/×)の判定基準の詳細化(部分点の考え方) → 「採点基準」を参照
-- [x] Skill起動時のコマンド/呼び出し方の具体化(トリガーフレーズ) → 「呼び出し方(トリガー)」を参照
-- [x] 採点時にどの範囲のシラバスJSONを読み込むか → `jq`での部分抽出に決定(「データ」セクションを参照)
+トラブルシューティング: 該当節の`content`が短く出題材料に乏しい場合は、`learning_objectives`の別の項目を参考にして生成し直す。
+
+### ステップ5: 採点とフィードバック
+
+**ARGUMENT**: `<user_answer>`(学習者の回答、このステップで聞き出す)
+
+学習者の回答を受け取り、`content` と照合して理解度レベル `<understanding_level>`(◎/△/×)を判定し、模範解答 `<model_answer>` と解説をフィードバックする。判定基準は [references/grading-criteria.md](references/grading-criteria.md) を参照。
+
+成功条件: `<understanding_level>` が確定し、判定理由を`content`の該当箇所を引用しながら説明している。
+
+トラブルシューティング: `<user_answer>` が的外れで`content`のどの箇所とも対応しない場合は×とし、該当箇所を示した上で読み直しを促す。
+
+### ステップ6: 記録
+
+**ARGUMENT**: `<chapter_id>`(ステップ2)、`<referenced_objective>`(ステップ4)、`<question_text>`(ステップ4)、`<user_answer>`(ステップ5)、`<model_answer>`(ステップ5)、`<understanding_level>`(ステップ5)
+
+`scripts/append_answer.py` に標準入力でJSONを渡し、回答記録を追記する。ファイル・ディレクトリが無ければスクリプトが新規作成し、`answered_at`もスクリプトが自動付与する。
+
+```bash
+python3 .claude/skills/jstqb-study/scripts/append_answer.py <<'EOF'
+{"chapter_id": "<chapter_id>", "cognitive_level": "<referenced_objectiveのcognitive_level>", "learning_objective": "<referenced_objectiveのdescription>", "question_text": "<question_text>", "user_answer": "<user_answer>", "model_answer": "<model_answer>", "understanding_level": "<understanding_level>"}
+EOF
+```
+
+成功条件: スクリプトが正常終了し(`記録しました: records/answers.jsonl`と表示される)、`records/answers.jsonl`に1行追記されている。
+
+トラブルシューティング: 必須フィールド不足や`cognitive_level`/`understanding_level`が許容値以外の場合、スクリプトはエラーメッセージを出して終了する。メッセージに従って値を修正し再実行する。
+
+### ステップ7: 繰り返しと終了
+
+**ARGUMENT**: `<question_count>`(ステップ3)
+
+指定した問題数に達するまでステップ4〜6を繰り返し、達したらセッションを終える。
+
+成功条件: `<question_count>` と、保存された回答記録の件数が一致している。
+
+トラブルシューティング: 学習者が途中でセッションの終了を求めた場合は、その時点で終了してよい。
+
+## 参考
+
+詳細設計(課題の背景、ユースケース図、ER図、フローチャート)は [issuesリポジトリの設計.md](https://github.com/yuyakawai0411/issues/blob/main/設計.md) を参照。
