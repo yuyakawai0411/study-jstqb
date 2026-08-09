@@ -5,9 +5,29 @@ JSTQB Foundation Levelの学習を、Claude Skillとして支援するリポジ�
 - Skill本体: [`.claude/skills/jstqb-study/SKILL.md`](.claude/skills/jstqb-study/SKILL.md)
 - 教材データ: `syllabus/chapters.json`(公式シラバスの章立てJSON。全6章・22節分を整備済み)
 - 学習記録: `records/answers.jsonl`(回答履歴。`.claude/skills/jstqb-study/scripts/append_answer.py`で追記する)
-- 設計の詳細: [issuesリポジトリの設計.md](https://github.com/yuyakawai0411/issues/blob/main/設計.md)
+- 設計の詳細: [doc/design.md](doc/design.md)
 
 本リポジトリはJSTQB公式シラバスの原文抜粋を含むためprivateで運用する。
+
+## 本Skillが解決する課題
+
+- 従来の練習問題では、自分が学習を終えた章までの範囲に絞って練習問題を出すのが難しかった
+- 従来の練習問題は選択式問題になるため、勘で正答できてしまい、なぜその回答になったのか(理解度)をチェックする仕組みがなかった
+
+## 学習方針
+
+- **Input教材**
+  - 理解度チェック用(解説の拠り所): 公式シラバス(PDF)
+  - 練習問題用(4択の反復演習): テス友アプリ
+- **本Skillの役割**: 学習した章の内容について、**自由記述(文字入力)の理解度チェック問題のみ**を生成・採点する
+  - 4択の本番形式問題や単純な反復演習はテス友でカバーするため、本Skillでは扱わない
+- **勉強スケジュール**: 1ヶ月前後、平日1h・休日2〜4h
+
+## 提供する機能
+
+1. 学習した章・出題数を指定した、自由記述の理解度チェック問題の出題
+2. 回答の採点(理解度レベル: ◎/△/×)とフィードバック(模範解答・解説)
+3. 回答履歴の記録(問題・回答・理解度レベル・実施日・対応章)
 
 ## 使い方
 
