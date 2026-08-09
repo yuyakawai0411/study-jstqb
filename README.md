@@ -4,10 +4,22 @@ JSTQB Foundation Levelの学習を、Claude Skillとして支援するリポジ�
 
 - Skill本体: [`.claude/skills/jstqb-study/SKILL.md`](.claude/skills/jstqb-study/SKILL.md)
 - 教材データ: `syllabus/chapters.json`(公式シラバスの章立てJSON。全6章・22節分を整備済み)
-- 学習記録: `records/answers.jsonl`(回答履歴。`scripts/append_answer.py`で追記する)
+- 学習記録: `records/answers.jsonl`(回答履歴。`.claude/skills/jstqb-study/scripts/append_answer.py`で追記する)
 - 設計の詳細: [issuesリポジトリの設計.md](https://github.com/yuyakawai0411/issues/blob/main/設計.md)
 
 本リポジトリはJSTQB公式シラバスの原文抜粋を含むためprivateで運用する。
+
+## 使い方
+
+1. 以下いずれかの方法でこのリポジトリを開いたセッションを起動する
+   - ターミナルでClaude Codeを起動する
+   - Claudeのモバイルアプリの「Code」からこのリポジトリ(`study-jstqb`)を選択する
+2. 「JSTQBの理解度チェックをして」「今日勉強した内容の問題を出して」のように話しかけると、`jstqb-study` Skillが起動する
+3. 今日勉強した章・節と、学んだこと(内容の要点)を聞かれるので答える
+4. 出題数を聞かれるので答える(未指定の場合は3問程度が提案される)
+5. 生成された問題に自由記述で回答する
+6. 理解度(◎/△/×)の判定と、根拠・模範解答がフィードバックされる
+7. 回答は自動で `records/answers.jsonl` に記録される。指定した問題数に達するまで4〜6が繰り返される
 
 ## デモンストレーション
 
@@ -34,4 +46,27 @@ Skillのワークフローが実際に動作することを、3つの学習シ�
 - 回答: 「静的テストも動的テストも、どちらもプログラムを実際に実行してテストします。違いは、静的テストはコードだけを見るのに対し、動的テストは画面のUIも見る点です。」
 - 判定: 「静的テストはソフトウェアの実行を伴わない」という原文と明確に矛盾する記述を含む → 採点基準の横断ルールにより **×**
 
-3件とも `scripts/append_answer.py` で `records/answers.jsonl` に正しく追記されることを確認した(このデータ自体は模擬テスト用のため、確認後にファイルは空にしている)。
+3件とも `.claude/skills/jstqb-study/scripts/append_answer.py` で `records/answers.jsonl` に正しく追記されることを確認した(このデータ自体は模擬テスト用のため、確認後にファイルは空にしている)。
+
+## ディレクトリ構成
+
+```
+study-jstqb/
+├── README.md
+├── .claude/
+│   └── skills/
+│       └── jstqb-study/
+│           ├── SKILL.md              # ワークフロー本体
+│           ├── references/
+│           │   ├── data-schema.md        # chapters.json/answers.jsonlのスキーマ
+│           │   ├── grading-criteria.md   # 採点基準
+│           │   └── learning-objectives.md# 出題観点の使い方
+│           └── scripts/
+│               └── append_answer.py  # 回答記録の追記
+├── syllabus/
+│   └── chapters.json                 # 公式シラバスの章立てデータ
+├── records/
+│   └── answers.jsonl                 # 回答履歴
+└── scripts/
+    └── parse_chapter.py              # PDF→JSON変換スクリプト(セットアップ時のみ使用)
+```
