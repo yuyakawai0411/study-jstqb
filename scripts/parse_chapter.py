@@ -42,16 +42,20 @@ K_LEVEL_LABELS = {
 
 
 def parse_chapter(lines: list[str], chapter_number: str) -> dict:
-    # 1. chapter heading + time estimate (first non-empty line)
-    title = None
-    idx = 0
-    m = CHAPTER_HEADING_RE.match(lines[0].strip())
-    if m:
-        title = m.group(2)
+    # 1. chapter heading + time estimate。タイトルが長いと2行目以降に折り返される
+    #    (例: "2 ソフトウェア開発ライフサイクル全体を通  130 分" -> 次行 " してのテスト")
+    #    ため、「キーワード」行に到達するまでをタイトルとして連結する。
+    first_line = lines[0].strip()
+    m = CHAPTER_HEADING_RE.match(first_line)
+    title_parts = [m.group(2)] if m else [first_line]
     idx = 1
+    while idx < len(lines) and lines[idx].strip() != "キーワード":
+        title_parts.append(lines[idx].strip())
+        idx += 1
+    title = "".join(title_parts)
 
     # 2. キーワード block(採用しないため読み飛ばすだけ)
-    if lines[idx].strip() == "キーワード":
+    if idx < len(lines) and lines[idx].strip() == "キーワード":
         idx += 1
         while idx < len(lines) and not lines[idx].startswith("第"):
             idx += 1
@@ -60,18 +64,19 @@ def parse_chapter(lines: list[str], chapter_number: str) -> dict:
     objectives_by_section: dict[str, list[dict]] = {}
     if idx < len(lines) and lines[idx].startswith("第"):
         idx += 1  # skip "第1章の学習の目的"
+        last_objective = None
         while idx < len(lines):
             line = lines[idx]
             fl_m = FL_OBJECTIVE_RE.match(line)
             if fl_m:
                 fl_id, k_level, desc = fl_m.groups()
                 section_key = ".".join(fl_id.replace("FL-", "").split(".")[:2])
-                objectives_by_section.setdefault(section_key, []).append(
-                    {
-                        "cognitive_level": K_LEVEL_LABELS.get(k_level, k_level),
-                        "description": desc.strip(),
-                    }
-                )
+                obj = {
+                    "cognitive_level": K_LEVEL_LABELS.get(k_level, k_level),
+                    "description": desc.strip(),
+                }
+                objectives_by_section.setdefault(section_key, []).append(obj)
+                last_objective = obj
                 idx += 1
                 continue
             sec_m = SECTION_HEADING_RE.match(line)
@@ -80,6 +85,11 @@ def parse_chapter(lines: list[str], chapter_number: str) -> dict:
             )
             if sec_m and next_is_objective:
                 # 目的一覧内の節見出し(次行がFL-x.x.xで始まる)
+                idx += 1
+                continue
+            if line != line.lstrip() and last_objective is not None:
+                # FL-x.x.xの説明が長くて折り返された継続行(インデントあり)
+                last_objective["description"] += line.strip()
                 idx += 1
                 continue
             # 目的一覧ブロックの終わり(本文の節見出しに到達)。ここでbreakし、
