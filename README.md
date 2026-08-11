@@ -43,6 +43,9 @@ JSTQB Foundation Levelの学習を、Claude Skillとして支援するリポジ�
 
 ## デモンストレーション
 
+<img width="1170" height="2532" alt="IMG_2636" src="https://github.com/user-attachments/assets/08189b91-8593-459c-a1c3-90e557e26531" />
+
+
 Skillのワークフローが実際に動作することを、3つの学習シナリオ(認知レベル: 記憶/適用/理解)で確認した。学習者の発話・回答はいずれも動作確認用の模擬データ。
 
 ### デモ1: 1.2「なぜテストが必要か？」(記憶レベル) → ◎
