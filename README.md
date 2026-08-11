@@ -43,9 +43,6 @@ JSTQB Foundation Levelの学習を、Claude Skillとして支援するリポジ�
 
 ## デモンストレーション
 
-<img width="1170" height="2532" alt="IMG_2636" src="https://github.com/user-attachments/assets/08189b91-8593-459c-a1c3-90e557e26531" />
-
-
 Skillのワークフローが実際に動作することを、3つの学習シナリオ(認知レベル: 記憶/適用/理解)で確認した。学習者の発話・回答はいずれも動作確認用の模擬データ。
 
 ### デモ1: 1.2「なぜテストが必要か？」(記憶レベル) → ◎
@@ -70,6 +67,11 @@ Skillのワークフローが実際に動作することを、3つの学習シ�
 - 判定: 「静的テストはソフトウェアの実行を伴わない」という原文と明確に矛盾する記述を含む → 採点基準の横断ルールにより **×**
 
 3件とも `.claude/skills/jstqb-study/scripts/append_answer.py` で `records/answers.jsonl` に正しく追記されることを確認した(このデータ自体は模擬テスト用のため、確認後にファイルは空にしている)。
+
+
+**デモ動作画面**
+
+<img width="1170" height="2532" alt="IMG_2636" src="https://github.com/user-attachments/assets/08189b91-8593-459c-a1c3-90e557e26531" />
 
 ## ディレクトリ構成
 
